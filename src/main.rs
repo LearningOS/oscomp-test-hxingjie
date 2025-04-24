@@ -14,7 +14,7 @@ use alloc::vec::Vec;
 
 #[unsafe(no_mangle)]
 fn main() {
-    ax_println!("#### OS COMP TEST GROUP START basic-musl ####");
+    //ax_println!("#### OS COMP TEST GROUP START basic-musl ####");
 
     // Create a init process
     axprocess::Process::new_init(axtask::current().id().as_u64() as _).build();
@@ -36,5 +36,5 @@ fn main() {
         info!("User task {} exited with code: {:?}", testcase, exit_code);
     }
 
-    ax_println!("#### OS COMP TEST GROUP END basic-musl ####");
+    //ax_println!("#### OS COMP TEST GROUP END basic-musl ####");
 }
