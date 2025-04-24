@@ -1,7 +1,7 @@
-use core::ffi::{c_char, c_void};
+use core::ffi::{c_char, c_void, c_int};
 
 use arceos_posix_api::{self as api, ctypes::mode_t};
-use axerrno::LinuxResult;
+use axerrno::{LinuxResult, LinuxError};
 
 use crate::ptr::{PtrWrapper, UserConstPtr, UserPtr};
 
@@ -37,4 +37,15 @@ pub fn sys_openat(
 pub fn sys_open(path: UserConstPtr<c_char>, flags: i32, modes: mode_t) -> LinuxResult<isize> {
     use arceos_posix_api::AT_FDCWD;
     sys_openat(AT_FDCWD as _, path, flags, modes)
+}
+
+// 成功：返回新的文件偏移量（从文件头开始的字节数）。
+// 失败：返回 (off_t)-1，并设置 errno（如 EBADF 无效文件描述符）。
+pub fn sys_lseek(fd: c_int, offset: api::ctypes::off_t, whence: c_int) -> LinuxResult<isize> {
+    let off: api::ctypes::off_t = api::sys_lseek(fd, offset, whence);
+    if off >= 0 {
+        Ok(off as isize)
+    } else {
+        Err(LinuxError::EINVAL)
+    }
 }

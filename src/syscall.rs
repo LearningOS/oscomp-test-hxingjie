@@ -139,6 +139,11 @@ fn handle_syscall(tf: &TrapFrame, syscall_num: usize) -> isize {
             tf.arg0() as _,
             tf.arg1() as _,
         ),
+        Sysno::lseek => sys_lseek(
+            tf.arg0() as _,
+            tf.arg1() as _,
+            tf.arg2() as _,
+        ),
         // my code
         _ => {
             warn!("Unimplemented syscall: {}", sysno);
