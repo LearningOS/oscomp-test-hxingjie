@@ -25,7 +25,7 @@ fn main() {
         .filter(|&x| !x.is_empty());
 
     for testcase in testcases {
-        //ax_println!("\nnow test {}\n", testcase);
+        //ax_println!("\n\x1b[34mnow test {}\x1b[0m\n", testcase);
 
         let args = testcase
             .split_ascii_whitespace()
