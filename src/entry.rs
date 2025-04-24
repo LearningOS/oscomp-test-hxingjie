@@ -10,6 +10,9 @@ use starry_core::{
 };
 
 pub fn run_user_app(args: &[String], envs: &[String]) -> Option<i32> {
+    ax_println!("run_user_app, args {:?}", args); // my code
+    ax_println!("run_user_app, envs {:?}", envs); // my code
+
     let mut uspace = new_user_aspace_empty()
         .and_then(|mut it| {
             copy_from_kernel(&mut it)?;
@@ -20,7 +23,7 @@ pub fn run_user_app(args: &[String], envs: &[String]) -> Option<i32> {
     let exe_path = args[0].clone();
     let (dir, name) = exe_path.rsplit_once('/').unwrap_or(("", &exe_path));
     set_current_dir(dir).expect("Failed to set current dir");
-
+    ax_println!("dir: {}, name: {}", dir, name); // my code
     let (entry_vaddr, ustack_top) = load_user_app(&mut uspace, args, envs)
         .unwrap_or_else(|e| panic!("Failed to load user app: {}", e));
 

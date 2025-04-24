@@ -11,3 +11,7 @@ pub use self::exit::*;
 pub use self::schedule::*;
 pub use self::thread::*;
 pub use self::wait::*;
+
+// my code
+mod resource;
+pub use self::resource::*;

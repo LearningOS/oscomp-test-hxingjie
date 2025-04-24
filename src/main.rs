@@ -14,8 +14,6 @@ use alloc::vec::Vec;
 
 #[unsafe(no_mangle)]
 fn main() {
-    //ax_println!("#### OS COMP TEST GROUP START basic-musl ####");
-
     // Create a init process
     axprocess::Process::new_init(axtask::current().id().as_u64() as _).build();
     
@@ -25,8 +23,6 @@ fn main() {
         .filter(|&x| !x.is_empty());
 
     for testcase in testcases {
-        //ax_println!("\n\x1b[34mnow test {}\x1b[0m\n", testcase);
-
         let args = testcase
             .split_ascii_whitespace()
             .map(Into::into)
@@ -35,6 +31,4 @@ fn main() {
         let exit_code = entry::run_user_app(&args, &[]);
         info!("User task {} exited with code: {:?}", testcase, exit_code);
     }
-
-    //ax_println!("#### OS COMP TEST GROUP END basic-musl ####");
 }
