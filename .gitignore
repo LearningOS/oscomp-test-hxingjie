@@ -1,5 +1,5 @@
 /.vscode
-/.arceos
+#/.arceos
 /.cargo
 /.idea
 .DS_Store
