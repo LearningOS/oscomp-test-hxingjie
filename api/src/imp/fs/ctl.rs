@@ -296,3 +296,28 @@ pub fn sys_unlinkat(dir_fd: isize, path: UserConstPtr<c_char>, flags: usize) -> 
 pub fn sys_getcwd(buf: UserPtr<c_char>, size: usize) -> LinuxResult<isize> {
     Ok(arceos_posix_api::sys_getcwd(buf.get_as_null_terminated()?.as_ptr() as _, size) as _)
 }
+
+// my code for unlink
+pub fn sys_unlink(path: UserConstPtr<c_char>) -> LinuxResult<isize> {
+    let path = path.get_as_null_terminated()?;
+
+    arceos_posix_api::handle_file_path(-100, Some(path.as_ptr() as _), false)
+        .inspect_err(|e| warn!("unlinkat error: {:?}", e))
+        .and_then(|path| {
+            axfs::api::metadata(path.as_str()).and_then(|metadata| {
+                if metadata.is_dir() {
+                    Err(AxError::IsADirectory)
+                } else {
+                    debug!("unlink file: {:?}", path);
+                    arceos_posix_api::HARDLINK_MANAGER
+                        .remove_link(&path)
+                        .ok_or_else(|| {
+                            debug!("unlink file error");
+                            AxError::NotFound
+                        })
+                        .map(|_| 0)
+                }
+            })
+        })
+        .map_err(|err| err.into())
+}

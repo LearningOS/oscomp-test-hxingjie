@@ -39,9 +39,9 @@ pub fn sys_open(path: UserConstPtr<c_char>, flags: i32, modes: mode_t) -> LinuxR
     sys_openat(AT_FDCWD as _, path, flags, modes)
 }
 
-// 成功：返回新的文件偏移量（从文件头开始的字节数）。
-// 失败：返回 (off_t)-1，并设置 errno（如 EBADF 无效文件描述符）。
 pub fn sys_lseek(fd: c_int, offset: api::ctypes::off_t, whence: c_int) -> LinuxResult<isize> {
+    // 成功：返回新的文件偏移量（从文件头开始的字节数）。
+    // 失败：返回 (off_t)-1，并设置 errno（如 EBADF 无效文件描述符）。
     let off: api::ctypes::off_t = api::sys_lseek(fd, offset, whence);
     if off >= 0 {
         Ok(off as isize)
