@@ -3,7 +3,7 @@ use axtask::{TaskExtRef, current};
 use macro_rules_attribute::apply;
 use num_enum::TryFromPrimitive;
 
-use crate::syscall_instrument;
+use crate::{ptr::PtrWrapper, syscall_instrument};
 
 #[apply(syscall_instrument)]
 pub fn sys_getpid() -> LinuxResult<isize> {
@@ -98,22 +98,30 @@ pub fn sys_arch_prctl(code: i32, addr: crate::ptr::UserPtr<u64>) -> LinuxResult<
 
 // FUTEX_WAIT=0 和 FUTEX_WAKE=1
 pub fn sys_futex(uaddr: crate::ptr::UserPtr<u32>, futex_op: i32, val: u32, 
-    timeout: crate::ptr::UserPtr<arceos_posix_api::ctypes::timespec>) -> LinuxResult<isize> {
-    if futex_op == 0 {
-        ax_println!("futex_op == 0");
-    } else if futex_op == 1 {
-        ax_println!("futex_op == 1");
-    } else if futex_op == 2 {
-        ax_println!("futex_op == 2");
-    } else if futex_op == 3 {
-        ax_println!("futex_op == 3");
-    } else if futex_op == 4 {
-        ax_println!("futex_op == 4");
-    } else if futex_op == 128 {
-        ax_println!("futex_op == 128");
+    timeout: crate::ptr::UserConstPtr<arceos_posix_api::ctypes::timespec>) -> LinuxResult<isize> {
+    let mut op = futex_op;
+    if op & (1 << 7) != 0 {
+        op &= !(1 << 7);
+        if op == 0 {
+            let uaddr = uaddr.get_as_bytes(4).unwrap();
+            unsafe {
+                if *uaddr != val {
+                    ax_println!("todo");
+                    panic!()
+                } else {
+                    ax_println!("sleep");
+                    arceos_posix_api::sys_nanosleep(timeout.get()?, core::ptr::null_mut());
+                    ax_println!("wake");
+                    return Ok(-1)
+                }
+            }
+        } else {
+            ax_println!("todo");
+            panic!()
+        }
     } else {
-        ax_println!("todo op");
-        panic!("sys_futex!");
+        ax_println!("todo");
+        panic!()    
     }
     Ok(0)
 }

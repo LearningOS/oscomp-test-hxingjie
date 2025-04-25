@@ -151,6 +151,7 @@ pub struct ProcessData {
     heap_bottom: AtomicUsize,
     /// The user heap top
     heap_top: AtomicUsize,
+    pub maskset: Arc<Mutex<usize>>, // my code
 }
 
 impl ProcessData {
@@ -161,6 +162,7 @@ impl ProcessData {
             ns: AxNamespace::new_thread_local(),
             heap_bottom: AtomicUsize::new(axconfig::plat::USER_HEAP_BASE),
             heap_top: AtomicUsize::new(axconfig::plat::USER_HEAP_BASE),
+            maskset: Arc::new(Mutex::new(0)), // my code
         }
     }
 
@@ -179,6 +181,16 @@ impl ProcessData {
     pub fn set_heap_top(&self, top: usize) {
         self.heap_top.store(top, Ordering::Release)
     }
+
+    pub fn read_maskset(&self) -> usize {
+        let guard = self.maskset.lock();
+        *guard
+    } // guard leaving the scope, the lock is automatically released
+
+    pub fn update_maskset(&self, new_value: usize) {
+        let mut guard = self.maskset.lock();
+        *guard = new_value;
+    } // guard leaving the scope, the lock is automatically released
 }
 
 impl Drop for ProcessData {
