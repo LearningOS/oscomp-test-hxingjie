@@ -239,6 +239,23 @@ pub unsafe fn sys_stat(path: *const c_char, buf: *mut ctypes::stat) -> c_int {
         }
         let mut options = OpenOptions::new();
         options.read(true);
+        let dir = axfs::fops::Directory::open_dir(path?, &options);
+        if dir.is_ok() {
+            let st = ctypes::stat {
+                st_ino: 1,
+                st_nlink: 1,
+                st_mode: ((0o4_u32) << 12),
+                st_uid: 1000,
+                st_gid: 1000,
+                st_size: 0 as _,
+                st_blocks: 0 as _,
+                st_blksize: 512,
+                ..Default::default()
+            };
+            unsafe { *buf = st };
+            return Ok(0);
+        }
+        
         let file = axfs::fops::File::open(path?, &options)?;
         let st = File::new(file, path?.to_string()).stat()?;
         unsafe { *buf = st };

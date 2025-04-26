@@ -174,7 +174,7 @@ pub fn sys_fstatat(
 ) -> LinuxResult<isize> {
     let path = path.get_as_null_terminated()?;
     let path = arceos_posix_api::handle_file_path(dir_fd, Some(path.as_ptr() as _), false)?;
-
+    
     let kstatbuf = kstatbuf.get()?;
 
     let mut statbuf = arceos_posix_api::ctypes::stat::default();
