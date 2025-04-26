@@ -106,21 +106,21 @@ pub fn sys_futex(uaddr: crate::ptr::UserPtr<u32>, futex_op: i32, val: u32,
             let uaddr = uaddr.get_as_bytes(4).unwrap();
             unsafe {
                 if *uaddr != val {
-                    ax_println!("todo");
+                    ax_println!("sys_futex todo");
                     panic!()
                 } else {
-                    ax_println!("sleep");
+                    ax_println!("sys_futex sleep");
                     arceos_posix_api::sys_nanosleep(timeout.get()?, core::ptr::null_mut());
-                    ax_println!("wake");
+                    ax_println!("sys_futex wake");
                     return Ok(-1)
                 }
             }
         } else {
-            ax_println!("todo");
+            ax_println!("sys_futex todo");
             panic!()
         }
     } else {
-        ax_println!("todo");
+        ax_println!("sys_futex todo");
         panic!()    
     }
     Ok(0)

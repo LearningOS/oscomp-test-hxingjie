@@ -196,6 +196,33 @@ pub fn sys_fstatat(
     Ok(0)
 }
 
+pub fn sys_stat(
+    path: UserConstPtr<c_char>,
+    kstatbuf: UserPtr<Kstat>,
+) -> LinuxResult<isize> {
+    let path = path.get_as_null_terminated()?;
+    let path = arceos_posix_api::handle_file_path(-100, Some(path.as_ptr() as _), false)?;
+    let kstatbuf = kstatbuf.get()?;
+
+    let mut statbuf = arceos_posix_api::ctypes::stat::default();
+    let result = unsafe {
+        arceos_posix_api::sys_stat(
+            path.as_ptr() as _,
+            &mut statbuf as *mut arceos_posix_api::ctypes::stat,
+        )
+    };
+    if result < 0 {
+        return Ok(result as _);
+    }
+
+    unsafe {
+        let kstat = Kstat::from(statbuf);
+        kstatbuf.write(kstat);
+    }
+
+    Ok(0)
+}
+
 #[repr(C)]
 #[derive(Debug, Default)]
 pub struct FsStatxTimestamp {
@@ -289,9 +316,8 @@ pub fn sys_statx(
     //        and the AT_EMPTY_PATH flag is specified in flags (see
     //        below), then the target file is the one referred to by the
     //        file descriptor dirfd.
-
+    
     let path = pathname.get_as_str()?;
-
     const AT_EMPTY_PATH: u32 = 0x1000;
     if path.is_empty() {
         if flags & AT_EMPTY_PATH == 0 {
@@ -322,6 +348,38 @@ pub fn sys_statx(
         statx.stx_mtime.tv_nsec = status.st_mtime.tv_nsec as u32;
         Ok(0)
     } else {
-        Err(LinuxError::ENOSYS)
+        let mut status = arceos_posix_api::ctypes::stat::default();
+        let res = unsafe {
+            arceos_posix_api::sys_stat(
+                path.as_ptr() as _,
+                &mut status as *mut arceos_posix_api::ctypes::stat,
+            )
+        };
+        if res < 0 {
+            return Err(LinuxError::try_from(-res).unwrap());
+        }
+
+        let statx = unsafe { &mut *statxbuf.get()? };
+        statx.stx_blksize = status.st_blksize as u32;
+        statx.stx_attributes = status.st_mode as u64;
+        statx.stx_nlink = status.st_nlink;
+        statx.stx_uid = status.st_uid;
+        statx.stx_gid = status.st_gid;
+        statx.stx_mode = status.st_mode as u16;
+        statx.stx_ino = status.st_ino;
+        statx.stx_size = status.st_size as u64;
+        statx.stx_blocks = status.st_blocks as u64;
+        statx.stx_attributes_mask = 0x7FF;
+        statx.stx_atime.tv_sec = status.st_atime.tv_sec;
+        statx.stx_atime.tv_nsec = status.st_atime.tv_nsec as u32;
+        statx.stx_ctime.tv_sec = status.st_ctime.tv_sec;
+        statx.stx_ctime.tv_nsec = status.st_ctime.tv_nsec as u32;
+        statx.stx_mtime.tv_sec = status.st_mtime.tv_sec;
+        statx.stx_mtime.tv_nsec = status.st_mtime.tv_nsec as u32;
+
+        Ok(0)
+
+        // ax_println!("sys_statx err");
+        // Err(LinuxError::ENOSYS)*/
     }
 }
