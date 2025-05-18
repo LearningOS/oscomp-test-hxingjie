@@ -45,14 +45,30 @@ impl MappingBackend for Backend {
     fn map(&self, start: VirtAddr, size: usize, flags: MappingFlags, pt: &mut PageTable) -> bool {
         match *self {
             Self::Linear { pa_va_offset } => Self::map_linear(start, size, flags, pt, pa_va_offset),
-            Self::Alloc { populate } => Self::map_alloc(start, size, flags, pt, populate),
+            Self::Alloc { populate } => {
+                error!("map, Self::Alloc, populate: {}, start: {:#x}, end: {:#x}, size: {:#x}", populate, start, start + size, size); // 填充
+                if populate == true && size % 0x200000 == 0 && memory_addr::is_aligned(start.into(), 0x200000) {
+                    error!("2m page alloc"); // 填充
+                    Self::map_alloc_2m(start, size, flags, pt, populate)
+                } else {
+                    Self::map_alloc(start, size, flags, pt, populate)
+                }
+            }
         }
     }
 
     fn unmap(&self, start: VirtAddr, size: usize, pt: &mut PageTable) -> bool {
         match *self {
             Self::Linear { pa_va_offset } => Self::unmap_linear(start, size, pt, pa_va_offset),
-            Self::Alloc { populate } => Self::unmap_alloc(start, size, pt, populate),
+            Self::Alloc { populate } => {
+                error!("unmap, Self::Alloc, populate: {}, start: {:#x}, end: {:#x}, size: {:#x}", populate, start, start + size, size); // 填充
+                if populate == true && size % 0x200000 == 0 && memory_addr::is_aligned(start.into(), 0x200000) {
+                    error!("2m page dealloc"); // 填充
+                    Self::unmap_alloc_2m(start, size, pt, populate)
+                } else {
+                    Self::unmap_alloc(start, size, pt, populate)
+                }
+            }
         }
     }
 
